@@ -1,4 +1,5 @@
 import Carbon.HIToolbox
+import Foundation
 
 /// Registers global hotkeys via the Carbon Event HotKey API and dispatches each
 /// press to the right handler by id. A single installed event handler serves all
@@ -20,23 +21,28 @@ final class HotKeyCenter {
         installHandlerIfNeeded()
         let id = nextID
         nextID += 1
-        handlers[id] = handler
 
         var ref: EventHotKeyRef?
         let hotKeyID = EventHotKeyID(signature: OSType(0x434C_5350), id: id) // 'CLSP'
         let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID,
                                          GetApplicationEventTarget(), 0, &ref)
-        if status == noErr { refs[id] = ref }
+
+        guard status == noErr, let registeredRef = ref else {
+            NSLog("ClipStack: failed to register global hotkey (keyCode %u, modifiers 0x%04X, error %d)",
+                  keyCode, modifiers, status)
+            return
+        }
+        handlers[id] = handler
+        refs[id] = registeredRef
     }
 
     private func installHandlerIfNeeded() {
         guard !installed else { return }
-        installed = true
 
         var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
                                  eventKind: UInt32(kEventHotKeyPressed))
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-        InstallEventHandler(
+        let status = InstallEventHandler(
             GetApplicationEventTarget(),
             { _, event, userData -> OSStatus in
                 guard let event, let userData else { return OSStatus(eventNotHandledErr) }
@@ -52,6 +58,11 @@ final class HotKeyCenter {
             },
             1, &spec, selfPtr, nil
         )
+        guard status == noErr else {
+            NSLog("ClipStack: failed to install hotkey event handler (error %d)", status)
+            return
+        }
+        installed = true
     }
 
     private func dispatch(_ id: UInt32) {
