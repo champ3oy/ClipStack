@@ -26,13 +26,14 @@ final class HotKeyCenter {
         let hotKeyID = EventHotKeyID(signature: OSType(0x434C_5350), id: id) // 'CLSP'
         let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID,
                                          GetApplicationEventTarget(), 0, &ref)
-        guard status == noErr else {
+
+        guard status == noErr, let registeredRef = ref else {
             NSLog("ClipStack: failed to register global hotkey (keyCode %u, modifiers 0x%04X, error %d)",
                   keyCode, modifiers, status)
             return
         }
         handlers[id] = handler
-        refs[id] = ref
+        refs[id] = registeredRef
     }
 
     private func installHandlerIfNeeded() {
