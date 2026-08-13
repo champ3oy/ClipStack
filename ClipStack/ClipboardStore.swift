@@ -95,7 +95,7 @@ final class ClipboardStore: ObservableObject {
     /// Put an item on the pasteboard and move it to the top of history.
     /// Does NOT simulate a paste — call `sendPaste()` after re-activating the target app.
     func write(_ item: ClipboardItem) {
-        lastWrittenChangeCount = pasteboard.clearContents()
+        pasteboard.clearContents()
         switch item.content {
         case .text(let text):
             pasteboard.setString(text, forType: .string)
