@@ -77,8 +77,11 @@ final class QuickPasteController {
     // MARK: - Commit on release
 
     private func checkRelease() {
-        let flags = NSEvent.modifierFlags
-        let held = flags.contains(.command) && flags.contains(.control)
+        // NSEvent.modifierFlags reflects the last event *this app* received, which
+        // is stale here — ClipStack gets no key events while another app is focused.
+        // Read the live hardware state instead.
+        let flags = CGEventSource.flagsState(.combinedSessionState)
+        let held = flags.contains(.maskCommand) && flags.contains(.maskControl)
         if !held { commit() }
     }
 
