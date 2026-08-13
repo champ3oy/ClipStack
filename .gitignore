@@ -1,0 +1,17 @@
+# Build output
+build/
+*.app
+
+# macOS
+.DS_Store
+
+# Signing material — never commit private keys / certs
+*.pem
+*.p12
+*.key
+*.mobileprovision
+
+# Xcode (in case a project is added later)
+xcuserdata/
+*.xcuserstate
+DerivedData/
